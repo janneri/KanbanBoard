@@ -1,0 +1,145 @@
+script.
+  var columns = !{JSON.stringify(columns)};
+  var lastMovedTask = null;
+
+  $(function() {
+    enableDragsort(columns);
+    enableColumnHeaderStyle(columns);
+    $("input").focus();
+    $("input").keyup(handleKeyUp);
+    $('form').submit(handleFormSubmit);
+  });
+
+  function handleFormSubmit() {
+    var cmd = parseCmd();
+    var url = "/"+cmd.type; // /add or /assign, .. 
+    $.post(url, cmd)
+      .success(function() { window.location.href = "/"; })
+      .error(function() { alert("error"); });
+    return false;
+  }
+
+  function parseCmd() {
+    var cmdtype = inputPart(0);
+    var columnAndIdx = parseColumnAndIndex(inputPart(1));
+
+    if (cmdtype == "assign" && columnAndIdx != null) {
+      return {type: "assigntask", column: columnAndIdx.column, index: columnAndIdx.index, towho: inputPart(2)};
+    }
+    else if (cmdtype == "del" && columnAndIdx != null) {
+      return {type: "removetask", column: columnAndIdx.column, index: columnAndIdx.index};
+    }
+    else if (cmdtype == "add" && columnAndIdx != null) {
+      var inputParts = $("input").val().split(" ");
+      var assignTo = parseAssignTarget(inputParts);
+      inputParts.drop(2);
+      var descParts = inputParts.filter(function(part) { return !part.startsWith("@") });
+      var desc = descParts.join(" ");
+      return {type: "addtask", column: columnAndIdx.column, index: columnAndIdx.index, assignTo: assignTo, desc: desc};
+    }
+    else {
+      return {type: "addtask", column: columns[0].id, index: 1, assignTo: "", desc: $("input").val()};
+    }
+  }
+  
+  function parseAssignTarget(inputParts) {
+    var targets = inputParts.filter(function(part) { return part.startsWith("@") });
+    return targets.length > 0 ? targets[0].replace("@", "") : "";
+  }
+  
+  // str such as t1 where t is the column id and 1 means the first task in that col
+  function parseColumnAndIndex(str) {
+    if (str == "undefined" || str == null) return null;
+    for (var i in columns) {
+      if (str.startsWith(columns[i].id)) {
+        return {column: columns[i].id,
+                index: str.replace(columns[i].id, "")};
+      }
+    }
+    return null;
+  };
+
+  function handleKeyUp() {
+    $("li div").removeClass("selected");
+
+    var colidx = parseColumnAndIndex(inputPart(1));
+    if (colidx != null) {
+      var elem = $("#"+colidx.column+" li:eq("+colidx.index+") div");
+      if (elem.exists()) {
+        elem.addClass("selected");
+      }
+    }
+  }
+
+  function inputPart(partIndex) {
+    //if (!partIndex) return $("input").val();
+    var parts = $("input").val().split(" ", partIndex+1);
+    if (partIndex >= parts.length) return null;
+
+    return parts[partIndex];
+  }
+
+  function enableColumnHeaderStyle(columns) {
+    $.each(columns, function(i, col) { $("ul#"+col.id+" .columnheader div").css(col.css) });
+  }
+    
+  function enableDragsort(cols) {
+    var columnIds = $.map(cols, function(col, i) { return "#"+col.id }).join(",");
+    $(columnIds).dragsort({
+      dragSelector: "div.draggable",
+      dragBetween: true,
+      dragEnd: saveTasksToServer,
+      placeHolderTemplate: "<li class='placeHolder'><div></div></li>" });
+    
+    // save the item which was moved last, because dragsort does not support this?
+    $("li.task").mouseup(function() {
+      var movedItem = $(this);
+      var colId = $(this).parent().attr("id");
+      lastMovedTask = htmlToTask(colId, movedItem)
+      //alert(task.toString());
+    });
+  }
+
+  function readHtmlToTasks() {
+    // send state as json to server
+    var tasks = [];
+    for (var i in columns) {
+      var col = columns[i];
+      var lis = $("#"+col.id+" li.task");
+      lis.map(function() {
+        tasks.push(htmlToTask(col.id, $(this)));
+      });
+    }
+    return tasks;
+  }
+
+  function htmlToTask(colId, li) {
+    var div = li.children(":first-child");
+    var task = div.children(":first-child").html();
+    var assignedTo = div.children(":last-child").html().replace("@", "");
+    return {"column": colId, "task": task, "assign": assignedTo};
+  }
+
+  function saveTasksToServer() {
+    var tasks = readHtmlToTasks();
+    var movedTask = $.grep(tasks, function(task) { return lastMovedTask.task == task.task; })[0];
+    var tasksOfColumn = $.grep(tasks, function(task) { return task.column == movedTask.column; });
+    var newindex = tasksOfColumn.indexOf(movedTask);
+
+    $.post("/movetask", {task: movedTask, newindex: newindex});
+  }
+
+form(method="post", autocomplete="off")
+  input(name="cmd", id="cmd")
+
+for column in columns
+  ul(id=column.id, style='width: '+94/columns.length+'%')
+    li.columnheader
+      div (#{column.id}) #{column.label}
+    for task in tasks
+      if task.column == column.id
+        li.task
+          div.draggable 
+            span #{task.task}
+            span @#{task.assign}
+ 

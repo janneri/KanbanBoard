@@ -1,0 +1,40 @@
+body {
+  font: 11px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+ul {
+  margin: 0 6px 0 6px;
+  width: 350px;
+  list-style-type: none;
+  float: left;
+  padding: 0;
+}
+ul li {
+  padding: 5px;
+}
+ul li div {
+  border: solid 1px #000;
+  background-color: #ff9;
+}
+ul li div span {
+  display: block;
+}
+ul li div.selected {
+  border: solid 2px #f00;
+}
+.columnheader {
+  text-align: center;
+}
+.columnheader div {
+  background-color: #fff;
+  border: none;
+}
+.placeHolder {
+  background-color: #fff !important;
+  border: dashed 1px #808080 !important;
+}
+.placeHolder div {
+  border: none;
+}
+input {
+  width: 80%;
+}
