@@ -12,12 +12,13 @@ Install [node.js](http://nodejs.org/)
 Install [node package manager](http://npmjs.org/) 
 
 Install the following node.js plugins:
+
 [jade](http://jade-lang.com/)  
 [express](http://expressjs.com/)
 
-# Clone this app. 
-# Configure the columns you want to use. 
-# Run "node app.js".
+1. Clone this app. 
+2. Configure the columns you want to use. 
+3. Run "node app.js".
 
 Todo
 ------------
