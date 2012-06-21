@@ -1,8 +1,9 @@
 What is this?
 ---------------
 
-A kanban board. Implemented with node.js. 
-image(kanban.png)
+A (kanban) tool which allows you to create/update/drag-and-drop tasks. 
+
+![preview](http://github.com/janneri/KanbanBoard/raw/master/kanban.png)
 
 Installation
 ------------
@@ -14,7 +15,14 @@ Install the following node.js plugins:
 [jade](http://jade-lang.com/)  
 [express](http://expressjs.com/)
 
+# Clone this app. 
+# Configure the columns you want to use. 
+# Run "node app.js".
+
 Todo
 ------------
 
-Currently only an in-memory taskprovider is implemented. Support for mongodb and the Jira rest-api would be nice.
+* Add support for mongodb.
+* Add support for Jira.
+* Comet style notifications when tasks are updated.
+* Move the column configuration to a sensible configuration file.
